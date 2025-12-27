@@ -1,3 +1,6 @@
+// =========================
+// AvailabilityService.java
+// =========================
 package com.marcedev.barberapp.service;
 
 import com.marcedev.barberapp.dto.AvailabilityDTO;
@@ -17,9 +20,10 @@ public interface AvailabilityService {
             String endTime
     );
 
-    // ✅ ESTE MÉTODO FALTABA
+    // 🔴 FIRMA CORRECTA (con barberId)
     List<String> getAvailableSlots(
             Long businessId,
+            Long barberId,
             Long serviceId,
             LocalDate date
     );

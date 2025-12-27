@@ -7,8 +7,11 @@ import java.time.LocalTime;
 
 public record CreateAppointmentRequest(
         @NotNull Long businessId,
+        @NotNull Long barberId,
         @NotNull Long serviceId,
         @NotNull Long clientId,
         @NotNull LocalDate date,
         @NotNull LocalTime time
-) {}
+
+
+        ) {}

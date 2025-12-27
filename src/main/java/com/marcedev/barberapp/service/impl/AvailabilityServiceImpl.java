@@ -1,8 +1,9 @@
+// ===============================
+// AVAILABILITY SERVICE IMPL (CORREGIDO)
+// ===============================
 package com.marcedev.barberapp.service.impl;
 
 import com.marcedev.barberapp.dto.AvailabilityDTO;
-import com.marcedev.barberapp.entity.Availability;
-import com.marcedev.barberapp.entity.Business;
 import com.marcedev.barberapp.repository.AvailabilityRepository;
 import com.marcedev.barberapp.repository.BusinessRepository;
 import com.marcedev.barberapp.service.AppointmentService;
@@ -29,7 +30,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     @Override
     @Transactional(readOnly = true)
     public List<AvailabilityDTO> getAvailabilityByBusiness(Long businessId) {
-
         return availabilityRepository.findByBusinessId(businessId)
                 .stream()
                 .map(a -> new AvailabilityDTO(
@@ -47,18 +47,17 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             String startTime,
             String endTime
     ) {
-
-        Business business = businessRepository.findById(businessId)
+        var business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new EntityNotFoundException("Barbería no encontrada"));
 
-        Availability availability = availabilityRepository
+        var availability = availabilityRepository
                 .findByBusinessIdAndDayOfWeek(businessId, dayOfWeek)
-                .orElse(
-                        Availability.builder()
-                                .business(business)
-                                .dayOfWeek(dayOfWeek)
-                                .build()
-                );
+                .orElseGet(() -> {
+                    var a = new com.marcedev.barberapp.entity.Availability();
+                    a.setBusiness(business);
+                    a.setDayOfWeek(dayOfWeek);
+                    return a;
+                });
 
         availability.setStartTime(LocalTime.parse(startTime));
         availability.setEndTime(LocalTime.parse(endTime));
@@ -69,16 +68,15 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     @Override
     public List<String> getAvailableSlots(
             Long businessId,
+            Long barberId,
             Long serviceId,
             LocalDate date
     ) {
         return appointmentService.getAvailableSlots(
                 businessId,
+                barberId,
                 serviceId,
                 date
         );
     }
-
-
-
 }

@@ -1,3 +1,6 @@
+// ===============================
+// AVAILABILITY CONTROLLER (CORREGIDO)
+// ===============================
 package com.marcedev.barberapp.controller;
 
 import com.marcedev.barberapp.dto.AvailabilityRequest;
@@ -6,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,10 +22,14 @@ public class AvailabilityController {
     @GetMapping("/slots")
     public List<String> getSlots(
             @RequestParam Long businessId,
+            @RequestParam Long barberId,
             @RequestParam Long serviceId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date
     ) {
-        return availabilityService.getAvailableSlots(businessId, serviceId, date);
+        return availabilityService.getAvailableSlots(
+                businessId, barberId, serviceId, date
+        );
     }
 
     @PostMapping

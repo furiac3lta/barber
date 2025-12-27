@@ -13,11 +13,16 @@ public interface AppointmentService {
     List<AppointmentResponse> getByDate(Long businessId, LocalDate date);
     AppointmentResponse cancel(Long id);
     AppointmentResponse attend(Long id);
-    List<String> getAvailableSlots(Long businessId, Long serviceId, LocalDate date);
+    List<String> getAvailableSlots(
+            Long businessId,
+            Long barberId,
+            Long serviceId,
+            LocalDate date
+    );
     Map<DayOfWeek, List<AppointmentResponse>> getWeek(
             Long businessId,
             LocalDate date
     );
-
+    List<AppointmentResponse> getByPhone(String phone);
 
 }

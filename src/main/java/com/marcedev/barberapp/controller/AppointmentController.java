@@ -33,6 +33,14 @@ public class AppointmentController {
         return appointmentService.create(req);
     }
 
+    @GetMapping("/by-phone")
+    public List<AppointmentResponse> getByPhone(
+            @RequestParam String phone
+    ) {
+        return appointmentService.getByPhone(phone);
+    }
+
+
     @PutMapping("/{id}/cancel")
     public AppointmentResponse cancel(@PathVariable Long id) {
         return appointmentService.cancel(id);
@@ -58,6 +66,23 @@ public class AppointmentController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         return appointmentService.getWeek(businessId, date);
+    }
+
+    @GetMapping("/slots")
+    public List<String> getAvailableSlots(
+            @RequestParam Long businessId,
+            @RequestParam Long barberId,
+            @RequestParam Long serviceId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date
+    ) {
+        return appointmentService.getAvailableSlots(
+                businessId,
+                barberId,
+                serviceId,
+                date
+        );
     }
 
 
