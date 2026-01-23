@@ -16,21 +16,26 @@ public record AppointmentResponse(
         String clientPhone,
         Long serviceId,
         String serviceName,
-        Integer serviceDurationMin
-) {
+        Integer serviceDurationMin,
 
+        // 🆕 NUEVO
+        Long barberId,
+        String barberName
+) {
     public static AppointmentResponse from(Appointment a) {
         return new AppointmentResponse(
                 a.getId(),
                 a.getDate(),
-                a.getStartTime(),        // 👈 importante
+                a.getStartTime(),
                 a.getStatus(),
                 a.getClient().getId(),
                 a.getClient().getName(),
                 a.getClient().getPhone(),
                 a.getService().getId(),
                 a.getService().getName(),
-                a.getService().getDurationMin()
+                a.getService().getDurationMin(),
+                a.getBarber().getId(),      // 🆕
+                a.getBarber().getName()     // 🆕
         );
     }
 }

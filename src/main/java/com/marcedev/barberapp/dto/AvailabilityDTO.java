@@ -6,5 +6,7 @@ import java.time.LocalTime;
 public record AvailabilityDTO(
         DayOfWeek dayOfWeek,
         LocalTime startTime,
-        LocalTime endTime
+        LocalTime endTime,
+        LocalTime startTime2,
+        LocalTime endTime2
 ) {}

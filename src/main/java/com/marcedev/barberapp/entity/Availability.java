@@ -34,6 +34,12 @@ public class Availability {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 
+    @Column(name = "start_time_2")
+    private LocalTime startTime2;
+
+    @Column(name = "end_time_2")
+    private LocalTime endTime2;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "business_id", nullable = false)
     private Business business;

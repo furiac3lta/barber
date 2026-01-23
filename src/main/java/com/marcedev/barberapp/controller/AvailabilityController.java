@@ -38,7 +38,9 @@ public class AvailabilityController {
                 req.businessId(),
                 req.dayOfWeek(),
                 req.startTime(),
-                req.endTime()
+                req.endTime(),
+                req.startTime2(),
+                req.endTime2()
         );
     }
 

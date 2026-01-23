@@ -19,4 +19,7 @@ public class Business {
 
     @Column(length = 180)
     private String address;
+
+    @Column(nullable = false)
+    private Boolean active;
 }

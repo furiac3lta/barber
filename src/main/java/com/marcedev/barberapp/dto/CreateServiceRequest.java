@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public record CreateServiceRequest(
         @NotNull Long businessId,
         @NotBlank String name,
-        @NotNull Integer durationMin
+        @NotNull Integer durationMin,
+        @NotNull Integer price
 ) {}
 

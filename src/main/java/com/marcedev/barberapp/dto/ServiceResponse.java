@@ -6,13 +6,16 @@ public record ServiceResponse(
         Long id,
         String name,
         Integer durationMin,
+        Integer price,
         boolean active
+
 ) {
     public static ServiceResponse from(ServiceItem s) {
         return new ServiceResponse(
                 s.getId(),
                 s.getName(),
                 s.getDurationMin(),
+                s.getPrice(),
                 s.isActive()
         );
     }

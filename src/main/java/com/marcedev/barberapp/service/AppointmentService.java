@@ -2,6 +2,7 @@ package com.marcedev.barberapp.service;
 
 import com.marcedev.barberapp.dto.AppointmentResponse;
 import com.marcedev.barberapp.dto.CreateAppointmentRequest;
+import com.marcedev.barberapp.dto.RescheduleAppointmentRequest;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -24,5 +25,10 @@ public interface AppointmentService {
             LocalDate date
     );
     List<AppointmentResponse> getByPhone(String phone);
+
+    AppointmentResponse reschedule(
+            Long appointmentId,
+            RescheduleAppointmentRequest request
+    );
 
 }

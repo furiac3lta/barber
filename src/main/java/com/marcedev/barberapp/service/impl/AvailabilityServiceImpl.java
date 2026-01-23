@@ -8,6 +8,7 @@ import com.marcedev.barberapp.repository.AvailabilityRepository;
 import com.marcedev.barberapp.repository.BusinessRepository;
 import com.marcedev.barberapp.service.AppointmentService;
 import com.marcedev.barberapp.service.AvailabilityService;
+import com.marcedev.barberapp.security.BusinessAccessGuard;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,16 +27,21 @@ public class AvailabilityServiceImpl implements AvailabilityService {
     private final AvailabilityRepository availabilityRepository;
     private final BusinessRepository businessRepository;
     private final AppointmentService appointmentService;
+    private final BusinessAccessGuard businessAccessGuard;
 
     @Override
     @Transactional(readOnly = true)
     public List<AvailabilityDTO> getAvailabilityByBusiness(Long businessId) {
+
+        businessAccessGuard.assertBusinessAccess(businessId);
         return availabilityRepository.findByBusinessId(businessId)
                 .stream()
                 .map(a -> new AvailabilityDTO(
                         a.getDayOfWeek(),
                         a.getStartTime(),
-                        a.getEndTime()
+                        a.getEndTime(),
+                        a.getStartTime2(),
+                        a.getEndTime2()
                 ))
                 .toList();
     }
@@ -45,8 +51,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             Long businessId,
             DayOfWeek dayOfWeek,
             String startTime,
-            String endTime
+            String endTime,
+            String startTime2,
+            String endTime2
     ) {
+        businessAccessGuard.assertBusinessAccess(businessId);
+
         var business = businessRepository.findById(businessId)
                 .orElseThrow(() -> new EntityNotFoundException("Barbería no encontrada"));
 
@@ -61,8 +71,15 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
         availability.setStartTime(LocalTime.parse(startTime));
         availability.setEndTime(LocalTime.parse(endTime));
+        availability.setStartTime2(parseOptionalTime(startTime2));
+        availability.setEndTime2(parseOptionalTime(endTime2));
 
         availabilityRepository.save(availability);
+    }
+
+    private LocalTime parseOptionalTime(String value) {
+        if (value == null || value.isBlank()) return null;
+        return LocalTime.parse(value);
     }
 
     @Override
@@ -72,6 +89,8 @@ public class AvailabilityServiceImpl implements AvailabilityService {
             Long serviceId,
             LocalDate date
     ) {
+        businessAccessGuard.assertBusinessAccess(businessId);
+
         return appointmentService.getAvailableSlots(
                 businessId,
                 barberId,

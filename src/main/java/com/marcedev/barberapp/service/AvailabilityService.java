@@ -17,7 +17,9 @@ public interface AvailabilityService {
             Long businessId,
             DayOfWeek dayOfWeek,
             String startTime,
-            String endTime
+            String endTime,
+            String startTime2,
+            String endTime2
     );
 
     // 🔴 FIRMA CORRECTA (con barberId)

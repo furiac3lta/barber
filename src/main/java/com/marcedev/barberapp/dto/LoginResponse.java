@@ -4,5 +4,8 @@ public record LoginResponse(
         String token,
         Long userId,
         Long businessId,
-        String role
+        String role,
+        String name,
+        String email,
+        String phone
 ) {}

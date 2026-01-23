@@ -32,6 +32,14 @@ public class AvailabilityExceptionController {
         return service.get(businessId, date);
     }
 
+    @GetMapping("/recent")
+    public java.util.List<AvailabilityExceptionResponse> recent(
+            @RequestParam Long businessId,
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return service.listRecent(businessId, limit);
+    }
+
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(

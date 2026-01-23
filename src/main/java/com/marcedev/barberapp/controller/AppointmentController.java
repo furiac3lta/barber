@@ -2,6 +2,7 @@ package com.marcedev.barberapp.controller;
 
 import com.marcedev.barberapp.dto.AppointmentResponse;
 import com.marcedev.barberapp.dto.CreateAppointmentRequest;
+import com.marcedev.barberapp.dto.RescheduleAppointmentRequest;
 import com.marcedev.barberapp.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -83,6 +84,14 @@ public class AppointmentController {
                 serviceId,
                 date
         );
+    }
+
+    @PutMapping("/{id}/reschedule")
+    public AppointmentResponse reschedule(
+            @PathVariable Long id,
+            @RequestBody RescheduleAppointmentRequest request
+    ) {
+        return appointmentService.reschedule(id, request);
     }
 
 

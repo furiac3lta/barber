@@ -1,7 +1,8 @@
 package com.marcedev.barberapp.repository;
 
 import com.marcedev.barberapp.entity.Appointment;
-import org.springframework.data.jpa.repository.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
@@ -11,8 +12,9 @@ import java.util.List;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
     // =========================
-    // POR DÍA (CALENDARIO)
+    // EXISTENTE / GENERAL
     // =========================
+
     List<Appointment> findAllByBusinessIdAndDateOrderByStartTimeAsc(
             Long businessId,
             LocalDate date
@@ -23,18 +25,24 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             LocalDate date
     );
 
+    List<Appointment> findByBusinessIdAndDateBetween(
+            Long businessId,
+            LocalDate start,
+            LocalDate end
+    );
+
+    List<Appointment> findByClientPhone(String phone);
+
     // =========================
-    // POR BARBERO + DÍA
+    // 🔴 MULTI-BARBER (FALTABAN)
     // =========================
+
     List<Appointment> findByBusinessIdAndBarberIdAndDate(
             Long businessId,
             Long barberId,
             LocalDate date
     );
 
-    // =========================
-    // SOLAPAMIENTO (BARBERO)
-    // =========================
     @Query("""
         SELECT COUNT(a) > 0
         FROM Appointment a
@@ -54,16 +62,73 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     );
 
     // =========================
-    // SEMANA COMPLETA
+    // DASHBOARD (YA USADOS)
     // =========================
-    List<Appointment> findByBusinessIdAndDateBetween(
+
+    long countByBusinessIdAndDate(Long businessId, LocalDate date);
+
+    long countByBusinessIdAndDateAndStatus(
+            Long businessId,
+            LocalDate date,
+            com.marcedev.barberapp.enum_.AppointmentStatus status
+    );
+
+    long countByBusinessIdAndDateBetween(
             Long businessId,
             LocalDate start,
             LocalDate end
     );
 
-    // =========================
-    // CLIENTE POR TELÉFONO
-    // =========================
-    List<Appointment> findByClientPhone(String phone);
+    long countByBusinessIdAndDateBetweenAndStatus(
+            Long businessId,
+            LocalDate start,
+            LocalDate end,
+            com.marcedev.barberapp.enum_.AppointmentStatus status
+    );
+
+    @Query("""
+        select a
+        from Appointment a
+        where a.business.id = :businessId
+          and a.date = :date
+        order by a.startTime desc
+    """)
+    List<Appointment> findLastByBusinessAndDate(
+            @Param("businessId") Long businessId,
+            @Param("date") LocalDate date
+    );
+
+    @Query("""
+    SELECT COUNT(a) > 0 FROM Appointment a
+    WHERE a.business.id = :businessId
+      AND a.barber.id = :barberId
+      AND a.date = :date
+      AND a.status <> 'CANCELED'
+      AND a.id <> :excludeId
+      AND a.startTime < :endTime
+      AND a.endTime > :startTime
+""")
+    boolean existsOverlapping(
+            Long businessId,
+            Long barberId,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            Long excludeId
+    );
+
+    @Query("""
+    select a from Appointment a
+    where a.business.id = :businessId
+      and a.date between :from and :to
+      and (:barberId is null or a.barber.id = :barberId)
+""")
+    List<Appointment> findForCalendar(
+            @Param("businessId") Long businessId,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
+            @Param("barberId") Long barberId
+    );
+
+
 }

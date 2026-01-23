@@ -6,5 +6,7 @@ public record AvailabilityRequest(
         Long businessId,
         DayOfWeek dayOfWeek,
         String startTime,
-        String endTime
+        String endTime,
+        String startTime2,
+        String endTime2
 ) {}

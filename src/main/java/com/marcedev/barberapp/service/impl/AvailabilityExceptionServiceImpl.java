@@ -8,10 +8,12 @@ import com.marcedev.barberapp.entity.Business;
 import com.marcedev.barberapp.repository.AvailabilityExceptionRepository;
 import com.marcedev.barberapp.repository.BusinessRepository;
 import com.marcedev.barberapp.service.AvailabilityExceptionService;
+import com.marcedev.barberapp.security.BusinessAccessGuard;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -25,12 +27,15 @@ public class AvailabilityExceptionServiceImpl implements AvailabilityExceptionSe
 
     private final AvailabilityExceptionRepository exceptionRepository;
     private final BusinessRepository businessRepository;
+    private final BusinessAccessGuard businessAccessGuard;
 
     private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("H:mm");
     private static final DateTimeFormatter HH_MM_SS = DateTimeFormatter.ofPattern("H:mm[:ss]");
 
     @Override
     public AvailabilityExceptionResponse upsert(AvailabilityExceptionRequest req) {
+
+        businessAccessGuard.assertBusinessAccess(req.businessId());
 
         Business business = businessRepository.findById(req.businessId())
                 .orElseThrow(() -> new EntityNotFoundException("Barbería no encontrada"));
@@ -70,13 +75,29 @@ public class AvailabilityExceptionServiceImpl implements AvailabilityExceptionSe
     @Override
     @Transactional(readOnly = true)
     public AvailabilityExceptionResponse get(Long businessId, LocalDate date) {
+
+        businessAccessGuard.assertBusinessAccess(businessId);
         AvailabilityException ex = exceptionRepository.findByBusinessIdAndDate(businessId, date)
                 .orElseThrow(() -> new EntityNotFoundException("No hay excepción para esa fecha"));
         return AvailabilityExceptionResponse.from(ex);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public java.util.List<AvailabilityExceptionResponse> listRecent(Long businessId, int limit) {
+        businessAccessGuard.assertBusinessAccess(businessId);
+        int safeLimit = Math.min(Math.max(limit, 1), 30);
+        return exceptionRepository
+                .findByBusinessIdOrderByDateDesc(businessId, PageRequest.of(0, safeLimit))
+                .stream()
+                .map(AvailabilityExceptionResponse::from)
+                .toList();
+    }
+
+    @Override
     public void delete(Long businessId, LocalDate date) {
+
+        businessAccessGuard.assertBusinessAccess(businessId);
         AvailabilityException ex = exceptionRepository.findByBusinessIdAndDate(businessId, date)
                 .orElseThrow(() -> new EntityNotFoundException("No hay excepción para borrar"));
         exceptionRepository.delete(ex);
