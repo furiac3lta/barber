@@ -24,6 +24,10 @@ public class Barber {
     @JoinColumn(name = "business_id")
     private Business business;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true)
+    private User user;
+
     @ManyToMany
     @JoinTable(
             name = "barber_services",

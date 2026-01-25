@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,11 +26,15 @@ public class AvailabilityExceptionController {
     }
 
     @GetMapping
-    public AvailabilityExceptionResponse get(
+    public ResponseEntity<AvailabilityExceptionResponse> get(
             @RequestParam Long businessId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
-        return service.get(businessId, date);
+        try {
+            return ResponseEntity.ok(service.get(businessId, date));
+        } catch (jakarta.persistence.EntityNotFoundException ex) {
+            return ResponseEntity.noContent().build();
+        }
     }
 
     @GetMapping("/recent")

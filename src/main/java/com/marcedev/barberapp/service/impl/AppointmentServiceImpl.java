@@ -6,10 +6,12 @@ import com.marcedev.barberapp.enum_.AppointmentStatus;
 import com.marcedev.barberapp.repository.*;
 import com.marcedev.barberapp.service.AppointmentService;
 import com.marcedev.barberapp.security.BusinessAccessGuard;
+import com.marcedev.barberapp.security.AuthUser;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -90,6 +92,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         LocalDate date = req.date();
         LocalTime start = req.time();
+        if (isPastOrNow(date, start)) {
+            throw new IllegalArgumentException("No se puede reservar en un horario pasado");
+        }
         int duration = service.getDurationMin();
         LocalTime end = start.plusMinutes(duration);
 
@@ -151,6 +156,13 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse cancel(Long id) {
         Appointment a = appointmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Turno no encontrado"));
+        AuthUser authUser = getAuthUser();
+        if (authUser != null && "BARBER".equalsIgnoreCase(authUser.role())) {
+            Long barberId = authUser.barberId();
+            if (barberId == null || a.getBarber() == null || !barberId.equals(a.getBarber().getId())) {
+                throw new IllegalArgumentException("No tenés permiso para cancelar este turno");
+            }
+        }
         a.setStatus(AppointmentStatus.CANCELED);
         return toResponse(a);
     }
@@ -161,6 +173,14 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Turno no encontrado"));
         a.setStatus(AppointmentStatus.ATTENDED);
         return toResponse(a);
+    }
+
+    private AuthUser getAuthUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return null;
+        Object principal = auth.getPrincipal();
+        if (principal instanceof AuthUser user) return user;
+        return null;
     }
 
     // =========================
@@ -219,11 +239,18 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         List<String> slots = new ArrayList<>();
 
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
         for (TimeWindow window : windows) {
             LocalTime cursor = window.start();
             LocalTime last = window.end().minusMinutes(duration);
 
             while (!cursor.isAfter(last)) {
+                if (date.isEqual(today) && !cursor.isAfter(now)) {
+                    cursor = cursor.plusMinutes(15);
+                    continue;
+                }
                 LocalTime s = cursor;
                 LocalTime e = s.plusMinutes(duration);
 
@@ -320,6 +347,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment appt = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Turno no encontrado"));
+        AuthUser authUser = getAuthUser();
+        if (authUser != null && "BARBER".equalsIgnoreCase(authUser.role())) {
+            Long barberId = authUser.barberId();
+            if (barberId == null || appt.getBarber() == null || !barberId.equals(appt.getBarber().getId())) {
+                throw new IllegalArgumentException("No tenés permiso para reprogramar este turno");
+            }
+        }
 
         if (appt.getStatus() == AppointmentStatus.CANCELED) {
             throw new IllegalStateException("No se puede reprogramar un turno cancelado");
@@ -327,6 +361,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         LocalDate newDate = LocalDate.parse(request.date());
         LocalTime newStart = LocalTime.parse(request.time());
+        if (isPastOrNow(newDate, newStart)) {
+            throw new IllegalArgumentException("No se puede reprogramar a un horario pasado");
+        }
 
         int duration = appt.getService().getDurationMin();
         LocalTime newEnd = newStart.plusMinutes(duration);
@@ -350,5 +387,13 @@ public class AppointmentServiceImpl implements AppointmentService {
         appt.setStatus(AppointmentStatus.RESERVED);
 
         return toResponse(appt);
+    }
+
+    private boolean isPastOrNow(LocalDate date, LocalTime time) {
+        LocalDate today = LocalDate.now();
+        if (date.isBefore(today)) return true;
+        if (date.isAfter(today)) return false;
+        LocalTime now = LocalTime.now();
+        return !time.isAfter(now);
     }
 }

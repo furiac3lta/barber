@@ -27,6 +27,10 @@ public class JwtService {
     }
 
     public String generateToken(Long userId, String role, Long businessId) {
+        return generateToken(userId, role, businessId, null);
+    }
+
+    public String generateToken(Long userId, String role, Long businessId, Long barberId) {
         JwtBuilder builder = Jwts.builder()
                 .claim("role", role)
                 .setSubject(userId.toString())
@@ -36,6 +40,9 @@ public class JwtService {
 
         if (businessId != null) {
             builder.claim("businessId", businessId);
+        }
+        if (barberId != null) {
+            builder.claim("barberId", barberId);
         }
 
         return builder.compact();
@@ -51,6 +58,14 @@ public class JwtService {
 
     public Long extractBusinessId(String token) {
         Object raw = getClaims(token).get("businessId");
+        if (raw == null) return null;
+        if (raw instanceof Long l) return l;
+        if (raw instanceof Integer i) return i.longValue();
+        return Long.parseLong(String.valueOf(raw));
+    }
+
+    public Long extractBarberId(String token) {
+        Object raw = getClaims(token).get("barberId");
         if (raw == null) return null;
         if (raw instanceof Long l) return l;
         if (raw instanceof Integer i) return i.longValue();

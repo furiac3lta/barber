@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface BarberRepository extends JpaRepository<Barber, Long> {
     List<Barber> findByBusinessId(Long businessId);
@@ -23,5 +24,10 @@ public interface BarberRepository extends JpaRepository<Barber, Long> {
 
     long countByBusinessId(Long businessId);
     long countByBusinessIdAndActiveTrue(Long businessId);
+
+    Optional<Barber> findByUserId(Long userId);
+
+    @EntityGraph(attributePaths = { "user", "business" })
+    Optional<Barber> findWithUserById(Long id);
 
 }

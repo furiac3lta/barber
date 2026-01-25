@@ -45,6 +45,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/business/**").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/business/**").hasRole("SUPER_ADMIN")
 
+                        // CALENDAR (barber puede ver su agenda)
+                        .requestMatchers(HttpMethod.GET, "/api/admin/calendar").hasAnyRole("ADMIN", "SUPER_ADMIN", "BARBER")
+
                         // ADMIN protegido
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 

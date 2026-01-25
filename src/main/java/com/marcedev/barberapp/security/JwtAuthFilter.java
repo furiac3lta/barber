@@ -20,6 +20,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final com.marcedev.barberapp.repository.BarberRepository barberRepository;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -50,14 +51,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             Long userId = jwtService.extractUserId(token);
             String role = jwtService.extractRole(token);
             Long businessId = jwtService.extractBusinessId(token);
+            Long barberId = jwtService.extractBarberId(token);
 
             if (businessId == null) {
                 businessId = userRepository.findById(userId)
                         .map(user -> user.getBusiness() != null ? user.getBusiness().getId() : null)
                         .orElse(null);
             }
+            if (barberId == null && "BARBER".equalsIgnoreCase(role)) {
+                barberId = barberRepository.findByUserId(userId)
+                        .map(com.marcedev.barberapp.entity.Barber::getId)
+                        .orElse(null);
+            }
 
-            AuthUser authUser = new AuthUser(userId, businessId, role);
+            AuthUser authUser = new AuthUser(userId, businessId, role, barberId);
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(

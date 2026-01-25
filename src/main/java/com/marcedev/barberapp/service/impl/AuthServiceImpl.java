@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.marcedev.barberapp.enum_.Role;
 import com.marcedev.barberapp.repository.BusinessRepository;
+import com.marcedev.barberapp.repository.BarberRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final BusinessRepository businessRepository;
+    private final BarberRepository barberRepository;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -37,10 +39,18 @@ public class AuthServiceImpl implements AuthService {
 
         Long businessId = user.getBusiness() != null ? user.getBusiness().getId() : null;
 
+        Long barberId = null;
+        if (user.getRole() == Role.BARBER) {
+            barberId = barberRepository.findByUserId(user.getId())
+                    .map(com.marcedev.barberapp.entity.Barber::getId)
+                    .orElse(null);
+        }
+
         String token = jwtService.generateToken(
                 user.getId(),
                 user.getRole().name(),
-                businessId
+                businessId,
+                barberId
         );
 
         return new LoginResponse(

@@ -3,14 +3,18 @@ package com.marcedev.barberapp.controller;
 import com.marcedev.barberapp.dto.BarberResponse;
 import com.marcedev.barberapp.dto.BarberServicesRequest;
 import com.marcedev.barberapp.dto.BarberUpdateRequest;
+import com.marcedev.barberapp.dto.CreateBarberRequest;
 import com.marcedev.barberapp.entity.Barber;
+import com.marcedev.barberapp.entity.User;
 import com.marcedev.barberapp.repository.BarberRepository;
 import com.marcedev.barberapp.repository.BusinessRepository;
 import com.marcedev.barberapp.repository.ServiceRepository;
+import com.marcedev.barberapp.repository.UserRepository;
 import com.marcedev.barberapp.security.BusinessAccessGuard;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +28,9 @@ public class BarberController {
     private final BarberRepository barberRepository;
     private final BusinessRepository businessRepository;
     private final ServiceRepository serviceRepository;
+    private final UserRepository userRepository;
     private final BusinessAccessGuard businessAccessGuard;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
     public List<BarberResponse> getByBusiness(
@@ -53,18 +59,34 @@ public class BarberController {
     }
 
     @PostMapping
-    public BarberResponse create(
-            @RequestParam Long businessId,
-            @RequestParam String name
-    ) {
-        businessAccessGuard.assertBusinessAccess(businessId);
+    public BarberResponse create(@Valid @RequestBody CreateBarberRequest request) {
+        businessAccessGuard.assertBusinessAccess(request.businessId());
 
-        var business = businessRepository.findById(businessId)
+        var business = businessRepository.findById(request.businessId())
                 .orElseThrow();
 
-        Barber barber = Barber.builder()
-                .name(name)
+        if (userRepository.existsByEmail(request.email())) {
+            throw new IllegalArgumentException("El email ya está registrado");
+        }
+        if (userRepository.existsByPhone(request.phone())) {
+            throw new IllegalArgumentException("El teléfono ya está registrado");
+        }
+
+        User user = User.builder()
+                .name(request.name())
+                .email(request.email())
+                .phone(request.phone())
+                .password(passwordEncoder.encode(request.password()))
+                .role(com.marcedev.barberapp.enum_.Role.BARBER)
                 .business(business)
+                .active(true)
+                .build();
+        user = userRepository.save(user);
+
+        Barber barber = Barber.builder()
+                .name(request.name())
+                .business(business)
+                .user(user)
                 .active(true)
                 .build();
 
@@ -85,19 +107,27 @@ public class BarberController {
 
     @DeleteMapping("/{id}")
     public void deactivate(@PathVariable Long id) {
-        Barber barber = barberRepository.findById(id)
+        Barber barber = barberRepository.findWithUserById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
         businessAccessGuard.assertBusinessAccess(barber.getBusiness().getId());
         barber.setActive(false);
+        if (barber.getUser() != null) {
+            barber.getUser().setActive(false);
+            userRepository.save(barber.getUser());
+        }
         barberRepository.save(barber);
     }
 
     @PutMapping("/{id}/activate")
     public BarberResponse activate(@PathVariable Long id) {
-        Barber barber = barberRepository.findById(id)
+        Barber barber = barberRepository.findWithUserById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
         businessAccessGuard.assertBusinessAccess(barber.getBusiness().getId());
         barber.setActive(true);
+        if (barber.getUser() != null) {
+            barber.getUser().setActive(true);
+            userRepository.save(barber.getUser());
+        }
         return BarberResponse.from(barberRepository.save(barber));
     }
 
