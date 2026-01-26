@@ -17,6 +17,7 @@ public record AppointmentResponse(
         Long serviceId,
         String serviceName,
         Integer serviceDurationMin,
+        String reason,
 
         // 🆕 NUEVO
         Long barberId,
@@ -34,6 +35,7 @@ public record AppointmentResponse(
                 a.getService().getId(),
                 a.getService().getName(),
                 a.getService().getDurationMin(),
+                a.getReason(),
                 a.getBarber().getId(),      // 🆕
                 a.getBarber().getName()     // 🆕
         );

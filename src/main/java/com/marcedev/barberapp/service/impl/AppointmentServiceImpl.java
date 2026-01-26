@@ -47,6 +47,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 a.getService().getId(),
                 a.getService().getName(),
                 a.getService().getDurationMin(),
+                a.getReason(),
 
                 // 🆕 BARBER
                 a.getBarber().getId(),
@@ -130,6 +131,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .date(date)
                 .startTime(start)
                 .endTime(end)
+                .reason(req.reason())
                 .status(AppointmentStatus.RESERVED)
                 .build();
 

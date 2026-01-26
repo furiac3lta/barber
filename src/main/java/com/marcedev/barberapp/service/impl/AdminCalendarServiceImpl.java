@@ -42,6 +42,7 @@ public class AdminCalendarServiceImpl implements AdminCalendarService {
                         a.getBarber().getName(),
                         a.getService().getName(),
                         a.getClient().getName(),
+                        a.getReason(),
                         a.getClient().getPhone()
                 ))
                 .toList();

@@ -13,6 +13,7 @@ public record AdminCalendarEventResponse(
         String barberName,
         String serviceName,
         String clientName,
+        String reason,
         // AdminCalendarEventResponse
         String clientPhone
 

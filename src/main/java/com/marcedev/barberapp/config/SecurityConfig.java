@@ -36,6 +36,12 @@ public class SecurityConfig {
                         // AUTH
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // PASSWORDS
+                        .requestMatchers(HttpMethod.POST, "/api/users/password/change")
+                        .hasAnyRole("CLIENT", "BARBER", "ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/users/password/reset")
+                        .hasAnyRole("ADMIN", "SUPER_ADMIN")
+
                         // BOOKING público (cliente sin login)
                         .requestMatchers(HttpMethod.GET, "/api/services").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/appointments/slots").permitAll()
