@@ -29,6 +29,8 @@ public class ServiceItem {
     @Column(nullable = false)
     private Integer durationMin;
 
+    @Column(name = "break_min")
+    private Integer breakMin = 0;
 
     // 🆕 PRECIO DEL SERVICIO
     @Column(nullable = false)

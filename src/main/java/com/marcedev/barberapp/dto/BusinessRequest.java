@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record BusinessRequest(
         @NotBlank String name,
+        String description,
         @NotBlank String phone,
         String address
 ) {}

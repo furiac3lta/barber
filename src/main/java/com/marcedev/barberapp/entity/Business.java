@@ -14,6 +14,9 @@ public class Business {
     @Column(nullable = false, length = 120)
     private String name;
 
+    @Column(length = 255)
+    private String description;
+
     @Column(nullable = false, length = 30)
     private String phone;
 

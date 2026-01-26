@@ -21,6 +21,7 @@ public class BusinessServiceImpl implements BusinessService {
     public BusinessResponse create(BusinessRequest request) {
         Business business = Business.builder()
                 .name(request.name())
+                .description(request.description())
                 .phone(request.phone())
                 .address(request.address())
                 .active(true)
@@ -57,6 +58,7 @@ public class BusinessServiceImpl implements BusinessService {
                 .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
 
         business.setName(request.name());
+        business.setDescription(request.description());
         business.setPhone(request.phone());
         business.setAddress(request.address());
 
@@ -81,6 +83,7 @@ public class BusinessServiceImpl implements BusinessService {
         return new BusinessResponse(
                 b.getId(),
                 b.getName(),
+                b.getDescription(),
                 b.getPhone(),
                 b.getAddress(),
                 b.getActive()

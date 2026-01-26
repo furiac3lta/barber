@@ -96,7 +96,9 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("No se puede reservar en un horario pasado");
         }
         int duration = service.getDurationMin();
+        int breakMin = getBreakMin(service);
         LocalTime end = start.plusMinutes(duration);
+        LocalTime endWithBreak = end.plusMinutes(breakMin);
 
         DayOfWeek dow = date.getDayOfWeek();
 
@@ -104,19 +106,19 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .findByBusinessIdAndDayOfWeek(business.getId(), dow)
                 .orElseThrow(() -> new IllegalArgumentException("No hay disponibilidad"));
 
-        if (!isWithinAvailability(start, end, availability)) {
+        if (!isWithinAvailability(start, endWithBreak, availability)) {
             throw new IllegalArgumentException("Turno fuera del horario");
         }
 
-        boolean overlap = appointmentRepository.existsOverlappingByBusinessAndBarber(
+        if (hasOverlapWithBreak(
                 business.getId(),
                 barber.getId(),
                 date,
                 start,
-                end
-        );
-
-        if (overlap) {
+                end,
+                breakMin,
+                null
+        )) {
             throw new IllegalArgumentException("Turno ya ocupado para este barbero");
         }
 
@@ -214,11 +216,15 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         int duration = service.getDurationMin();
+        int breakMin = getBreakMin(service);
         DayOfWeek dow = date.getDayOfWeek();
 
         Availability availability = availabilityRepository
                 .findByBusinessIdAndDayOfWeek(businessId, dow)
-                .orElseThrow(() -> new IllegalArgumentException("No hay disponibilidad"));
+                .orElse(null);
+        if (availability == null) {
+            return List.of();
+        }
 
         List<TimeWindow> windows = buildWindows(availability);
 
@@ -244,7 +250,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         for (TimeWindow window : windows) {
             LocalTime cursor = window.start();
-            LocalTime last = window.end().minusMinutes(duration);
+            LocalTime last = window.end().minusMinutes(duration + breakMin);
 
             while (!cursor.isAfter(last)) {
                 if (date.isEqual(today) && !cursor.isAfter(now)) {
@@ -256,10 +262,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
                 boolean overlap = taken.stream()
                         .filter(a -> a.getStatus() != AppointmentStatus.CANCELED)
-                        .anyMatch(a ->
-                                a.getStartTime().isBefore(e)
-                                        && a.getEndTime().isAfter(s)
-                        );
+                        .anyMatch(a -> overlapsWithBreak(a, s, e, breakMin));
 
                 if (!overlap) {
                     slots.add(s.toString());
@@ -368,16 +371,16 @@ public class AppointmentServiceImpl implements AppointmentService {
         int duration = appt.getService().getDurationMin();
         LocalTime newEnd = newStart.plusMinutes(duration);
 
-        boolean overlap = appointmentRepository.existsOverlapping(
+        int breakMin = getBreakMin(appt.getService());
+        if (hasOverlapWithBreak(
                 appt.getBusiness().getId(),
                 appt.getBarber().getId(),
                 newDate,
                 newStart,
                 newEnd,
+                breakMin,
                 appt.getId()
-        );
-
-        if (overlap) {
+        )) {
             throw new IllegalArgumentException("Horario no disponible");
         }
 
@@ -395,5 +398,37 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (date.isAfter(today)) return false;
         LocalTime now = LocalTime.now();
         return !time.isAfter(now);
+    }
+
+    private int getBreakMin(ServiceItem service) {
+        Integer value = service.getBreakMin();
+        return value == null ? 0 : value;
+    }
+
+    private boolean hasOverlapWithBreak(
+            Long businessId,
+            Long barberId,
+            LocalDate date,
+            LocalTime start,
+            LocalTime end,
+            int newBreakMin,
+            Long ignoreId
+    ) {
+        List<Appointment> taken =
+                appointmentRepository.findByBusinessIdAndBarberIdAndDate(
+                        businessId, barberId, date
+                );
+
+        return taken.stream()
+                .filter(a -> a.getStatus() != AppointmentStatus.CANCELED)
+                .filter(a -> ignoreId == null || !a.getId().equals(ignoreId))
+                .anyMatch(a -> overlapsWithBreak(a, start, end, newBreakMin));
+    }
+
+    private boolean overlapsWithBreak(Appointment a, LocalTime start, LocalTime end, int newBreakMin) {
+        int existingBreak = getBreakMin(a.getService());
+        LocalTime existingEndWithBreak = a.getEndTime().plusMinutes(existingBreak);
+        LocalTime newEndWithBreak = end.plusMinutes(newBreakMin);
+        return start.isBefore(existingEndWithBreak) && newEndWithBreak.isAfter(a.getStartTime());
     }
 }

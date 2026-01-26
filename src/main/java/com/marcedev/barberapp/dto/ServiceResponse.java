@@ -7,6 +7,7 @@ public record ServiceResponse(
         String name,
         Integer durationMin,
         Integer price,
+        Integer breakMin,
         boolean active
 
 ) {
@@ -16,6 +17,7 @@ public record ServiceResponse(
                 s.getName(),
                 s.getDurationMin(),
                 s.getPrice(),
+                s.getBreakMin(),
                 s.isActive()
         );
     }

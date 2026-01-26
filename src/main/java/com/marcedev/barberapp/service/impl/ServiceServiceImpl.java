@@ -42,6 +42,7 @@ public class ServiceServiceImpl implements ServiceService {
         service.setName(request.name());
         service.setDurationMin(request.durationMin());
         service.setPrice(request.price());
+        service.setBreakMin(request.breakMin() == null ? 0 : request.breakMin());
         service.setBusiness(business);
         service.setActive(true);
 
@@ -85,6 +86,7 @@ public class ServiceServiceImpl implements ServiceService {
                 s.getName(),
                 s.getDurationMin(),
                 s.getPrice(),
+                s.getBreakMin(),
                 s.isActive()
         );
     }
@@ -100,6 +102,9 @@ public class ServiceServiceImpl implements ServiceService {
         service.setName(request.name());
         service.setDurationMin(request.durationMin());
         service.setPrice(request.price());
+        if (request.breakMin() != null) {
+            service.setBreakMin(request.breakMin());
+        }
 
         return ServiceResponse.from(service);
     }
